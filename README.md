@@ -1,73 +1,152 @@
-# Welcome to your Lovable project
+# ProManage
 
-## Project info
+A modern, full-stack Trello-style project management application with real-time collaboration.
 
-**URL**: https://lovable.dev/projects/a90cac45-9083-45a4-a5ba-0ef67a9cc851
+## Architecture
 
-## How can I edit this code?
+ProManage is built as a **monorepo** with separate frontend and backend:
 
-There are several ways of editing your application.
+- **Frontend**: React + TypeScript + Vite (runs in Lovable)
+- **Backend**: Node.js + Express + PostgreSQL (deploy separately to your VPS)
 
-**Use Lovable**
+## Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a90cac45-9083-45a4-a5ba-0ef67a9cc851) and start prompting.
+✅ Google OAuth authentication  
+✅ Boards, Lists, and Cards (Trello-style)  
+✅ Drag-and-drop reordering  
+✅ Real-time collaboration (Socket.IO)  
+✅ Comments and file attachments  
+✅ Team member management  
+✅ Role-based access control  
+✅ Beautiful, responsive UI  
 
-Changes made via Lovable will be committed automatically to this repo.
+## Quick Start
 
-**Use your preferred IDE**
+### Frontend (Lovable)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+The frontend is already running in Lovable. To connect it to your backend:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Create `.env` file:
+```bash
+VITE_API_URL=http://localhost:3000/api
+```
 
-Follow these steps:
+2. Update when you deploy backend to production
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Backend (Your VPS)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+See [backend/README.md](backend/README.md) for complete setup instructions.
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Quick version:
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your values
+npm run db:migrate
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Tech Stack
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Frontend
+- React 18 + TypeScript
+- Vite
+- TailwindCSS + shadcn/ui
+- Zustand (state management)
+- React Query
+- Dnd Kit (drag & drop)
+- Framer Motion
+- Socket.IO client
 
-**Use GitHub Codespaces**
+### Backend
+- Node.js + Express
+- PostgreSQL (pure SQL via `pg`)
+- Passport.js (Google OAuth)
+- Socket.IO
+- Zod validation
+- TypeScript
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Folder Structure
 
-## What technologies are used for this project?
+```
+promanage/
+├── src/                  # Frontend React app
+│   ├── components/
+│   ├── pages/
+│   ├── store/
+│   ├── api/
+│   └── types/
+│
+├── backend/              # Node.js API (deploy to VPS)
+│   ├── src/
+│   │   ├── db/
+│   │   ├── routes/
+│   │   ├── controllers/
+│   │   ├── socket/
+│   │   └── index.ts
+│   └── package.json
+│
+└── README.md
+```
 
-This project is built with:
+## Development Workflow
 
+1. **Frontend Development**: Work in Lovable (live preview)
+2. **Backend Development**: Run locally or on VPS
+3. **Connect**: Set `VITE_API_URL` to point to your backend
+4. **Deploy Backend**: Use PM2 + Nginx on your VPS
+5. **Deploy Frontend**: Lovable handles this automatically
+
+## Deployment
+
+### Backend Deployment (VPS)
+
+1. Set up PostgreSQL database
+2. Configure environment variables
+3. Run migrations: `npm run db:migrate`
+4. Build: `npm run build`
+5. Start with PM2: `pm2 start dist/index.js`
+6. Configure Nginx as reverse proxy
+
+See [backend/README.md](backend/README.md) for detailed instructions.
+
+### Frontend Deployment
+
+Frontend is automatically deployed by Lovable. Update `VITE_API_URL` to point to your production backend.
+
+## Google OAuth Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create OAuth 2.0 credentials
+3. Add authorized redirect URIs:
+   - Development: `http://localhost:3000/api/auth/google/callback`
+   - Production: `https://api.yourdomain.com/api/auth/google/callback`
+4. Add credentials to backend `.env` file
+
+## Security
+
+- ✅ Helmet.js security headers
+- ✅ CORS configured
+- ✅ Rate limiting
+- ✅ SQL injection protection (parameterized queries)
+- ✅ Input validation (Zod)
+- ✅ Role-based access control
+- ✅ Secure session management
+
+---
+
+## Original Lovable Project Info
+
+**URL**: https://lovable.dev/projects/a90cac45-9083-45a4-a5ba-0ef67a9cc851
+
+### Technologies
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/a90cac45-9083-45a4-a5ba-0ef67a9cc851) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT

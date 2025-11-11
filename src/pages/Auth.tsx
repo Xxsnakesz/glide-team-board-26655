@@ -8,9 +8,9 @@ const Auth = () => {
   const navigate = useNavigate();
 
   const handleGoogleAuth = () => {
-    // TODO: Implement Google OAuth
-    // For now, just redirect to dashboard
-    navigate('/dashboard');
+    // Redirect to backend Google OAuth endpoint
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    window.location.href = `${apiUrl}/auth/google`;
   };
 
   return (
