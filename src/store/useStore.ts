@@ -104,13 +104,8 @@ const mockLists: List[] = [
 ];
 
 export const useStore = create<AppState>((set) => ({
-  user: {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-  },
-  boards: mockBoards,
+  user: null,
+  boards: [],
   currentBoard: null,
   lists: [],
   

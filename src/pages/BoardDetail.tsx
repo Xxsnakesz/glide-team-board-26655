@@ -4,9 +4,13 @@ import { Navbar } from '@/components/Navbar';
 import { BoardList } from '@/components/BoardList';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useStore } from '@/store/useStore';
+import { useAuth } from '@/hooks/useAuth';
+import { boardsApi } from '@/api/boards';
+import { listsApi } from '@/api/lists';
+import { cardsApi } from '@/api/cards';
 import { Plus, X, ArrowLeft } from 'lucide-react';
-import type { Card as CardType, List } from '@/types';
+import { toast } from 'sonner';
+import type { Card as CardType, List, Board } from '@/types';
 import {
   DndContext,
   DragEndEvent,
@@ -21,18 +25,13 @@ import { TaskCard } from '@/components/TaskCard';
 const BoardDetail = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
-  const boards = useStore((state) => state.boards);
-  const lists = useStore((state) => state.lists);
-  const setLists = useStore((state) => state.setLists);
-  const addList = useStore((state) => state.addList);
-  const addCard = useStore((state) => state.addCard);
-  const moveCard = useStore((state) => state.moveCard);
-
+  const { user, loading } = useAuth();
+  
+  const [board, setBoard] = useState<Board | null>(null);
+  const [lists, setLists] = useState<List[]>([]);
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
   const [activeCard, setActiveCard] = useState<CardType | null>(null);
-
-  const board = boards.find((b) => b.id === boardId);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -43,100 +42,91 @@ const BoardDetail = () => {
   );
 
   useEffect(() => {
-    if (boardId === '1') {
-      // Load mock data for board 1
-      const mockLists: List[] = [
-        {
-          id: '1',
-          title: 'To Do',
-          position: 0,
-          boardId: '1',
-          cards: [
-            {
-              id: '1',
-              title: 'Design landing page',
-              description: 'Create a modern, responsive landing page',
-              position: 0,
-              listId: '1',
-              color: 'blue',
-            },
-            {
-              id: '2',
-              title: 'Set up analytics',
-              description: 'Configure Google Analytics and tracking',
-              position: 1,
-              listId: '1',
-              color: 'green',
-            },
-          ],
-        },
-        {
-          id: '2',
-          title: 'In Progress',
-          position: 1,
-          boardId: '1',
-          cards: [
-            {
-              id: '3',
-              title: 'Implement authentication',
-              description: 'Add Google OAuth integration',
-              position: 0,
-              listId: '2',
-              color: 'yellow',
-            },
-          ],
-        },
-        {
-          id: '3',
-          title: 'Done',
-          position: 2,
-          boardId: '1',
-          cards: [
-            {
-              id: '4',
-              title: 'Project setup',
-              description: 'Initialize project with React and TypeScript',
-              position: 0,
-              listId: '3',
-              color: 'purple',
-            },
-          ],
-        },
-      ];
-      setLists(mockLists);
+    if (!loading && !user) {
+      navigate('/auth');
+      return;
     }
-  }, [boardId, setLists]);
 
-  const handleAddList = () => {
-    if (newListTitle.trim() && boardId) {
-      const newList: List = {
-        id: Date.now().toString(),
-        title: newListTitle.trim(),
-        position: lists.length,
-        boardId,
-        cards: [],
-      };
-      addList(newList);
-      setNewListTitle('');
-      setIsAddingList(false);
+    if (boardId && user) {
+      loadBoard();
+      loadLists();
+    }
+  }, [boardId, user, loading, navigate]);
+
+  const loadBoard = async () => {
+    if (!boardId) return;
+    try {
+      const data = await boardsApi.getById(boardId);
+      setBoard(data);
+    } catch (error) {
+      toast.error('Failed to load board');
+      navigate('/dashboard');
     }
   };
 
-  const handleAddCard = (listId: string, title: string) => {
+  const loadLists = async () => {
+    if (!boardId) return;
+    try {
+      const data = await listsApi.getByBoardId(boardId);
+      
+      // Load cards for each list
+      const listsWithCards = await Promise.all(
+        data.map(async (list) => {
+          try {
+            const cards = await cardsApi.getByListId(list.id);
+            return { ...list, cards };
+          } catch {
+            return { ...list, cards: [] };
+          }
+        })
+      );
+      
+      setLists(listsWithCards);
+    } catch (error) {
+      toast.error('Failed to load lists');
+    }
+  };
+
+  const handleAddList = async () => {
+    if (newListTitle.trim() && boardId) {
+      try {
+        const newList = await listsApi.create({
+          title: newListTitle.trim(),
+          boardId,
+          position: lists.length,
+        });
+        setLists([...lists, { ...newList, cards: [] }]);
+        setNewListTitle('');
+        setIsAddingList(false);
+        toast.success('List created');
+      } catch (error) {
+        toast.error('Failed to create list');
+      }
+    }
+  };
+
+  const handleAddCard = async (listId: string, title: string) => {
     const list = lists.find((l) => l.id === listId);
     if (!list) return;
 
     const colors = ['blue', 'green', 'purple', 'yellow', 'red'];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-    const newCard: CardType = {
-      id: Date.now().toString(),
-      title,
-      position: list.cards.length,
-      listId,
-      color: randomColor,
-    };
-    addCard(listId, newCard);
+    try {
+      const newCard = await cardsApi.create({
+        title,
+        listId,
+        position: list.cards.length,
+        color: randomColor,
+      });
+      
+      setLists(lists.map(l => 
+        l.id === listId ? { ...l, cards: [...l.cards, newCard] } : l
+      ));
+      toast.success('Card created');
+    } catch (error) {
+      toast.error('Failed to create card');
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -149,25 +139,50 @@ const BoardDetail = () => {
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveCard(null);
 
     if (!over) return;
 
-    const activeCard = lists
+    const draggedCard = lists
       .flatMap((list) => list.cards)
       .find((card) => card.id === active.id);
     
-    if (!activeCard) return;
+    if (!draggedCard) return;
 
-    const sourceList = lists.find((list) => list.id === activeCard.listId);
+    const sourceList = lists.find((list) => list.id === draggedCard.listId);
     const destList = lists.find((list) => list.id === over.id);
 
     if (!sourceList || !destList) return;
 
     if (sourceList.id !== destList.id) {
-      moveCard(activeCard.id, sourceList.id, destList.id, destList.cards.length);
+      const newPosition = destList.cards.length;
+      
+      // Optimistic update
+      const newLists = lists.map(list => {
+        if (list.id === sourceList.id) {
+          return { ...list, cards: list.cards.filter(c => c.id !== draggedCard.id) };
+        }
+        if (list.id === destList.id) {
+          return { ...list, cards: [...list.cards, { ...draggedCard, listId: destList.id, position: newPosition }] };
+        }
+        return list;
+      });
+      setLists(newLists);
+
+      // API call
+      try {
+        await cardsApi.move(draggedCard.id, {
+          listId: destList.id,
+          position: newPosition,
+        });
+        toast.success('Card moved');
+      } catch (error) {
+        toast.error('Failed to move card');
+        // Revert on error
+        loadLists();
+      }
     }
   };
 

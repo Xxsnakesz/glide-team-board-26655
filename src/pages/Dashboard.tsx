@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { BoardCard } from '@/components/BoardCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useStore } from '@/store/useStore';
+import { useAuth } from '@/hooks/useAuth';
+import { boardsApi } from '@/api/boards';
 import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Board } from '@/types';
 
 const Dashboard = () => {
-  const boards = useStore((state) => state.boards);
-  const addBoard = useStore((state) => state.addBoard);
-  const user = useStore((state) => state.user);
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [boards, setBoards] = useState<Board[]>([]);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newBoardTitle, setNewBoardTitle] = useState('');
@@ -25,21 +28,51 @@ const Dashboard = () => {
     { name: 'red', class: 'bg-card-red' },
   ];
 
-  const handleCreateBoard = () => {
-    if (newBoardTitle.trim() && user) {
-      const newBoard: Board = {
-        id: Date.now().toString(),
-        title: newBoardTitle.trim(),
-        ownerId: user.id,
-        createdAt: new Date().toISOString(),
-        color: selectedColor,
-      };
-      addBoard(newBoard);
-      setNewBoardTitle('');
-      setSelectedColor('blue');
-      setIsDialogOpen(false);
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (user) {
+      loadBoards();
+    }
+  }, [user, loading, navigate]);
+
+  const loadBoards = async () => {
+    try {
+      const data = await boardsApi.getAll();
+      setBoards(data);
+    } catch (error) {
+      toast.error('Failed to load boards');
     }
   };
+
+  const handleCreateBoard = async () => {
+    if (newBoardTitle.trim()) {
+      try {
+        const newBoard = await boardsApi.create({
+          title: newBoardTitle.trim(),
+          color: selectedColor,
+        });
+        setBoards([...boards, newBoard]);
+        setNewBoardTitle('');
+        setSelectedColor('blue');
+        setIsDialogOpen(false);
+        toast.success('Board created successfully');
+      } catch (error) {
+        toast.error('Failed to create board');
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

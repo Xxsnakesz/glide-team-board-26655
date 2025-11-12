@@ -22,7 +22,30 @@ ProManage is built as a **monorepo** with separate frontend and backend:
 
 ## Quick Start
 
-### Frontend (Lovable)
+### Option 1: Docker (Recommended)
+
+The easiest way to run ProManage is using Docker Compose:
+
+```bash
+# 1. Copy environment file
+cp .env.example .env
+
+# 2. Edit .env with your Google OAuth credentials
+# See DOCKER_SETUP.md for detailed instructions
+
+# 3. Start all services
+docker-compose up -d
+
+# 4. Access the app
+# Frontend: http://localhost
+# Backend API: http://localhost:3000
+```
+
+See [DOCKER_SETUP.md](DOCKER_SETUP.md) for complete Docker setup guide.
+
+### Option 2: Manual Setup
+
+#### Frontend (Lovable)
 
 The frontend is already running in Lovable. To connect it to your backend:
 
@@ -33,7 +56,7 @@ VITE_API_URL=http://localhost:3000/api
 
 2. Update when you deploy backend to production
 
-### Backend (Your VPS)
+#### Backend (Your VPS)
 
 See [backend/README.md](backend/README.md) for complete setup instructions.
 
@@ -100,7 +123,16 @@ promanage/
 
 ## Deployment
 
-### Backend Deployment (VPS)
+### Docker Deployment (Recommended)
+
+```bash
+# Production with Docker
+docker-compose up -d --build
+```
+
+See [DOCKER_SETUP.md](DOCKER_SETUP.md) for production deployment guide.
+
+### Manual Backend Deployment (VPS)
 
 1. Set up PostgreSQL database
 2. Configure environment variables
