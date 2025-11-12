@@ -9,7 +9,7 @@ const boardSchema = z.object({
 
 export const getBoards = async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
     const result = await query(
       `SELECT DISTINCT b.* FROM boards b
        LEFT JOIN board_members bm ON b.id = bm.board_id
@@ -27,7 +27,7 @@ export const getBoards = async (req: Request, res: Response) => {
 export const createBoard = async (req: Request, res: Response) => {
   try {
     const { title, color } = boardSchema.parse(req.body);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     const result = await query(
       'INSERT INTO boards (title, color, owner_id) VALUES ($1, $2, $3) RETURNING *',
@@ -47,7 +47,7 @@ export const createBoard = async (req: Request, res: Response) => {
 export const getBoard = async (req: Request, res: Response) => {
   try {
     const boardId = parseInt(req.params.id);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access
     const accessCheck = await query(
@@ -73,7 +73,7 @@ export const updateBoard = async (req: Request, res: Response) => {
   try {
     const boardId = parseInt(req.params.id);
     const { title, color } = boardSchema.parse(req.body);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check ownership
     const ownerCheck = await query(
@@ -103,7 +103,7 @@ export const updateBoard = async (req: Request, res: Response) => {
 export const deleteBoard = async (req: Request, res: Response) => {
   try {
     const boardId = parseInt(req.params.id);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     const ownerCheck = await query(
       'SELECT 1 FROM boards WHERE id = $1 AND owner_id = $2',
@@ -126,7 +126,7 @@ export const addMember = async (req: Request, res: Response) => {
   try {
     const boardId = parseInt(req.params.id);
     const { userId: newUserId, role } = req.body;
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check if requester is owner or admin
     const ownerCheck = await query(
@@ -154,7 +154,7 @@ export const removeMember = async (req: Request, res: Response) => {
   try {
     const boardId = parseInt(req.params.id);
     const removeUserId = parseInt(req.params.userId);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     const ownerCheck = await query(
       'SELECT 1 FROM boards WHERE id = $1 AND owner_id = $2',

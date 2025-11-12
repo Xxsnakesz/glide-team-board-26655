@@ -11,7 +11,7 @@ const listSchema = z.object({
 export const getLists = async (req: Request, res: Response) => {
   try {
     const boardId = parseInt(req.params.boardId);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access
     const accessCheck = await query(
@@ -39,7 +39,7 @@ export const getLists = async (req: Request, res: Response) => {
 export const createList = async (req: Request, res: Response) => {
   try {
     const { title, boardId, position } = listSchema.parse(req.body);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access
     const accessCheck = await query(
@@ -82,7 +82,7 @@ export const updateList = async (req: Request, res: Response) => {
   try {
     const listId = parseInt(req.params.id);
     const { title, position } = req.body;
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access via board
     const accessCheck = await query(
@@ -126,7 +126,7 @@ export const updateList = async (req: Request, res: Response) => {
 export const deleteList = async (req: Request, res: Response) => {
   try {
     const listId = parseInt(req.params.id);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     const accessCheck = await query(
       `SELECT 1 FROM lists l

@@ -5,7 +5,9 @@ export const isAuthenticated = (
   res: Response,
   next: NextFunction
 ) => {
-  if (req.isAuthenticated()) {
+  const userId = (req.session as any)?.userId;
+  
+  if (userId) {
     return next();
   }
   res.status(401).json({ error: 'Authentication required' });

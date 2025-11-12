@@ -3,7 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
-import passport from 'passport';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
@@ -16,7 +15,6 @@ import commentRoutes from './routes/comments';
 import attachmentRoutes from './routes/attachments';
 import { setupSocketIO } from './socket';
 import { errorHandler } from './middlewares/errorHandler';
-import './config/passport';
 
 dotenv.config();
 
@@ -59,9 +57,6 @@ app.use(session({
   },
 }));
 
-// Passport initialization
-app.use(passport.initialize());
-app.use(passport.session());
 
 // Routes
 app.use('/api/auth', authRoutes);

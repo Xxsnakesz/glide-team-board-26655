@@ -1,10 +1,10 @@
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(100),
+  name VARCHAR(100) NOT NULL,
   email VARCHAR(150) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
   avatar TEXT,
-  google_id VARCHAR(200) UNIQUE,
   created_at TIMESTAMP DEFAULT NOW()
 );
 

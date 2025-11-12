@@ -14,7 +14,7 @@ const cardSchema = z.object({
 export const getCards = async (req: Request, res: Response) => {
   try {
     const listId = parseInt(req.params.listId);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access via board
     const accessCheck = await query(
@@ -43,7 +43,7 @@ export const getCards = async (req: Request, res: Response) => {
 export const createCard = async (req: Request, res: Response) => {
   try {
     const { title, description, listId, position, color, dueDate } = cardSchema.parse(req.body);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access
     const accessCheck = await query(
@@ -88,7 +88,7 @@ export const updateCard = async (req: Request, res: Response) => {
   try {
     const cardId = parseInt(req.params.id);
     const { title, description, color, dueDate, position } = req.body;
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access
     const accessCheck = await query(
@@ -146,7 +146,7 @@ export const moveCard = async (req: Request, res: Response) => {
   try {
     const cardId = parseInt(req.params.id);
     const { listId, position } = req.body;
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access
     const accessCheck = await query(
@@ -177,7 +177,7 @@ export const moveCard = async (req: Request, res: Response) => {
 export const deleteCard = async (req: Request, res: Response) => {
   try {
     const cardId = parseInt(req.params.id);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     const accessCheck = await query(
       `SELECT 1 FROM cards c

@@ -10,7 +10,7 @@ const commentSchema = z.object({
 export const getComments = async (req: Request, res: Response) => {
   try {
     const cardId = parseInt(req.params.cardId);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access
     const accessCheck = await query(
@@ -44,7 +44,7 @@ export const getComments = async (req: Request, res: Response) => {
 export const createComment = async (req: Request, res: Response) => {
   try {
     const { content, cardId } = commentSchema.parse(req.body);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access
     const accessCheck = await query(
@@ -79,7 +79,7 @@ export const createComment = async (req: Request, res: Response) => {
 export const deleteComment = async (req: Request, res: Response) => {
   try {
     const commentId = parseInt(req.params.id);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Can delete own comments or if board owner
     const result = await query(

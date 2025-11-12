@@ -6,7 +6,7 @@ import path from 'path';
 export const getAttachments = async (req: Request, res: Response) => {
   try {
     const cardId = parseInt(req.params.cardId);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access
     const accessCheck = await query(
@@ -45,7 +45,7 @@ export const uploadAttachment = async (req: Request, res: Response) => {
     }
 
     const cardId = parseInt(req.body.cardId);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Check access
     const accessCheck = await query(
@@ -84,7 +84,7 @@ export const uploadAttachment = async (req: Request, res: Response) => {
 export const deleteAttachment = async (req: Request, res: Response) => {
   try {
     const attachmentId = parseInt(req.params.id);
-    const userId = (req.user as any).id;
+    const userId = (req.session as any)?.userId;
 
     // Get attachment and check access
     const result = await query(

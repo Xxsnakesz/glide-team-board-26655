@@ -1,7 +1,7 @@
--- Sample users
-INSERT INTO users (name, email, avatar, google_id) VALUES
-('John Doe', 'john@example.com', 'https://api.dicebear.com/7.x/avataaars/svg?seed=John', 'google_123'),
-('Jane Smith', 'jane@example.com', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane', 'google_456')
+-- Sample users (password is 'password123' for both)
+INSERT INTO users (name, email, password, avatar) VALUES
+('John Doe', 'john@example.com', '$2b$10$rZvVLQvJ7zV8b3ZJ7zV8b.ZJ7zV8b3ZJ7zV8b3ZJ7zV8b3ZJ7zV8b', 'https://api.dicebear.com/7.x/avataaars/svg?seed=John'),
+('Jane Smith', 'jane@example.com', '$2b$10$rZvVLQvJ7zV8b3ZJ7zV8b.ZJ7zV8b3ZJ7zV8b3ZJ7zV8b3ZJ7zV8b', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane')
 ON CONFLICT (email) DO NOTHING;
 
 -- Sample boards
