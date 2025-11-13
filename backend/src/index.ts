@@ -3,9 +3,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import { pool } from './db';
 
 import authRoutes from './routes/auth';
 import boardRoutes from './routes/boards';
@@ -45,9 +47,16 @@ app.use(limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session configuration
+// Session configuration with PostgreSQL store
+const PgSession = connectPgSimple(session);
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  store: new PgSession({
+    pool: pool,
+    tableName: 'session',
+    createTableIfMissing: true,
+  }),
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
   cookie: {

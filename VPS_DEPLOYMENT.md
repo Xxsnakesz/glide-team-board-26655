@@ -112,7 +112,7 @@ npm install -g pm2
 
 # Start backend
 cd backend
-npm install
+npm install  # Make sure to install all dependencies including connect-pg-simple
 npm run build
 pm2 start dist/index.js --name promanage-backend
 
@@ -158,12 +158,19 @@ SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT 10;
 ### 6. Common Issues
 
 #### Signup fails with "Signup failed"
-- Check backend logs: `pm2 logs promanage-backend`
+- Check backend logs: `pm2 logs promanage-backend --lines 100`
 - Common causes:
-  - Database connection failed
-  - `SESSION_SECRET` not set
-  - `COOKIE_DOMAIN` misconfigured
-  - Not using HTTPS in production
+  - **Database connection failed**: Look for "❌ Database connection error" in logs
+  - **SESSION_SECRET not set**: Check your backend `.env` file
+  - **COOKIE_DOMAIN misconfigured**: Should match your domain (e.g., `.yourdomain.com`)
+  - **Not using HTTPS in production**: Sessions require HTTPS with `secure` cookies
+  - **Missing dependencies**: Run `cd backend && npm install` to ensure `connect-pg-simple` is installed
+
+**Debug Steps:**
+1. Check if backend is running: `pm2 status`
+2. View live logs: `pm2 logs promanage-backend`
+3. Test database: `psql -U postgres -d promanage -c "SELECT 1;"`
+4. Verify environment: `pm2 env promanage-backend | grep NODE_ENV`
 
 #### Sessions not persisting
 - Ensure `COOKIE_DOMAIN` matches your domain
