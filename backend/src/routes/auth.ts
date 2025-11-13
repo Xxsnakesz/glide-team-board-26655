@@ -19,11 +19,14 @@ const loginSchema = z.object({
 // Signup
 router.post('/signup', async (req, res) => {
   try {
+    console.log('Signup attempt:', { email: req.body.email, name: req.body.name });
+    
     const { name, email, password } = signupSchema.parse(req.body);
 
     // Check if user exists
     const existing = await query('SELECT * FROM users WHERE email = $1', [email]);
     if (existing.rows.length > 0) {
+      console.log('Signup failed: Email already exists');
       return res.status(400).json({ error: 'Email already registered' });
     }
 
@@ -37,28 +40,55 @@ router.post('/signup', async (req, res) => {
     );
 
     const user = result.rows[0];
+    console.log('User created successfully:', { id: user.id, email: user.email });
 
     // Set session
     (req.session as any).userId = user.id;
     
+    // Save session explicitly
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          reject(err);
+        } else {
+          console.log('Session saved successfully');
+          resolve();
+        }
+      });
+    });
+
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [user.id, 'signup', JSON.stringify({ email, name })]
+    );
+    
     res.json({ user });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.errors);
       return res.status(400).json({ error: error.errors[0].message });
     }
     console.error('Signup error:', error);
-    res.status(500).json({ error: 'Signup failed' });
+    res.status(500).json({ 
+      error: 'Signup failed',
+      details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+    });
   }
 });
 
 // Login
 router.post('/login', async (req, res) => {
   try {
+    console.log('Login attempt:', { email: req.body.email });
+    
     const { email, password } = loginSchema.parse(req.body);
 
     // Find user
     const result = await query('SELECT * FROM users WHERE email = $1', [email]);
     if (result.rows.length === 0) {
+      console.log('Login failed: User not found');
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -67,22 +97,47 @@ router.post('/login', async (req, res) => {
     // Verify password
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
+      console.log('Login failed: Invalid password');
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Set session
     (req.session as any).userId = user.id;
 
+    // Save session explicitly
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          reject(err);
+        } else {
+          console.log('Session saved successfully for user:', user.id);
+          resolve();
+        }
+      });
+    });
+
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [user.id, 'login', JSON.stringify({ email })]
+    );
+
     // Don't send password to client
     const { password: _, ...userWithoutPassword } = user;
     
+    console.log('Login successful for user:', user.id);
     res.json({ user: userWithoutPassword });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.errors);
       return res.status(400).json({ error: error.errors[0].message });
     }
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json({ 
+      error: 'Login failed',
+      details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+    });
   }
 });
 

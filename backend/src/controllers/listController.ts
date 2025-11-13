@@ -68,6 +68,12 @@ export const createList = async (req: Request, res: Response) => {
       [title, boardId, finalPosition]
     );
 
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [userId, 'create_list', JSON.stringify({ listId: result.rows[0].id, boardId, title })]
+    );
+
     res.status(201).json(result.rows[0]);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -140,6 +146,13 @@ export const deleteList = async (req: Request, res: Response) => {
     }
 
     await query('DELETE FROM lists WHERE id = $1', [listId]);
+    
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [userId, 'delete_list', JSON.stringify({ listId })]
+    );
+    
     res.json({ message: 'List deleted successfully' });
   } catch (error) {
     console.error('Delete list error:', error);

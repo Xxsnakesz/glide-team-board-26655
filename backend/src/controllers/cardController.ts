@@ -74,6 +74,12 @@ export const createCard = async (req: Request, res: Response) => {
       [title, description, listId, finalPosition, color, dueDate]
     );
 
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [userId, 'create_card', JSON.stringify({ cardId: result.rows[0].id, listId, title })]
+    );
+
     res.status(201).json(result.rows[0]);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -135,6 +141,12 @@ export const updateCard = async (req: Request, res: Response) => {
       values
     );
 
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [userId, 'update_card', JSON.stringify({ cardId, updates: { title, description, color, dueDate, position } })]
+    );
+
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Update card error:', error);
@@ -167,6 +179,12 @@ export const moveCard = async (req: Request, res: Response) => {
       [listId, position, cardId]
     );
 
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [userId, 'move_card', JSON.stringify({ cardId, listId, position })]
+    );
+
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Move card error:', error);
@@ -192,6 +210,13 @@ export const deleteCard = async (req: Request, res: Response) => {
     }
 
     await query('DELETE FROM cards WHERE id = $1', [cardId]);
+    
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [userId, 'delete_card', JSON.stringify({ cardId })]
+    );
+    
     res.json({ message: 'Card deleted successfully' });
   } catch (error) {
     console.error('Delete card error:', error);

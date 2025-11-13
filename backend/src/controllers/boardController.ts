@@ -34,6 +34,12 @@ export const createBoard = async (req: Request, res: Response) => {
       [title, color || 'blue', userId]
     );
 
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [userId, 'create_board', JSON.stringify({ boardId: result.rows[0].id, title })]
+    );
+
     res.status(201).json(result.rows[0]);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -90,6 +96,12 @@ export const updateBoard = async (req: Request, res: Response) => {
       [title, color, boardId]
     );
 
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [userId, 'update_board', JSON.stringify({ boardId, title, color })]
+    );
+
     res.json(result.rows[0]);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -115,6 +127,13 @@ export const deleteBoard = async (req: Request, res: Response) => {
     }
 
     await query('DELETE FROM boards WHERE id = $1', [boardId]);
+    
+    // Log activity
+    await query(
+      'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+      [userId, 'delete_board', JSON.stringify({ boardId })]
+    );
+    
     res.json({ message: 'Board deleted successfully' });
   } catch (error) {
     console.error('Delete board error:', error);
