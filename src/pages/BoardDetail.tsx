@@ -26,7 +26,7 @@ const BoardDetail = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  
+
   const [board, setBoard] = useState<Board | null>(null);
   const [lists, setLists] = useState<List[]>([]);
   const [isAddingList, setIsAddingList] = useState(false);
@@ -68,7 +68,7 @@ const BoardDetail = () => {
     if (!boardId) return;
     try {
       const data = await listsApi.getByBoardId(boardId);
-      
+
       // Load cards for each list
       const listsWithCards = await Promise.all(
         data.map(async (list) => {
@@ -80,7 +80,7 @@ const BoardDetail = () => {
           }
         })
       );
-      
+
       setLists(listsWithCards);
     } catch (error) {
       toast.error('Failed to load lists');
@@ -92,10 +92,20 @@ const BoardDetail = () => {
       try {
         const newList = await listsApi.create({
           title: newListTitle.trim(),
-          boardId,
+          boardId: parseInt(boardId),
           position: lists.length,
         });
-        setLists([...lists, { ...newList, cards: [] }]);
+
+        // Normalize the response to match our frontend format
+        const normalizedList = {
+          id: newList.id,
+          title: newList.title,
+          position: newList.position,
+          boardId: newList.board_id || newList.boardId,
+          cards: []
+        };
+
+        setLists([...lists, normalizedList]);
         setNewListTitle('');
         setIsAddingList(false);
         toast.success('List created');
@@ -115,12 +125,12 @@ const BoardDetail = () => {
     try {
       const newCard = await cardsApi.create({
         title,
-        listId,
+        listId: parseInt(listId),
         position: list.cards.length,
         color: randomColor,
       });
-      
-      setLists(lists.map(l => 
+
+      setLists(lists.map(l =>
         l.id === listId ? { ...l, cards: [...l.cards, newCard] } : l
       ));
       toast.success('Card created');
@@ -148,7 +158,7 @@ const BoardDetail = () => {
     const draggedCard = lists
       .flatMap((list) => list.cards)
       .find((card) => card.id === active.id);
-    
+
     if (!draggedCard) return;
 
     const sourceList = lists.find((list) => list.id === draggedCard.listId);
@@ -158,7 +168,7 @@ const BoardDetail = () => {
 
     if (sourceList.id !== destList.id) {
       const newPosition = destList.cards.length;
-      
+
       // Optimistic update
       const newLists = lists.map(list => {
         if (list.id === sourceList.id) {
@@ -200,7 +210,7 @@ const BoardDetail = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      
+
       <div className="border-b bg-card px-4 py-3">
         <div className="container mx-auto flex items-center gap-4">
           <Button
