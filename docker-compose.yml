@@ -36,7 +36,7 @@ services:
       SESSION_SECRET: ${SESSION_SECRET}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      FRONTEND_URL: ${FRONTEND_URL}
       UPLOAD_DIR: ./uploads
       MAX_FILE_SIZE: 5242880
     ports:
@@ -52,6 +52,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
     container_name: promanage-frontend
     environment:
       VITE_API_URL: ${VITE_API_URL}
@@ -67,4 +69,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  postgres_data:      

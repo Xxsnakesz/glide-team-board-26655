@@ -6,7 +6,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+# Force install devDependencies during build
+RUN npm install --include=dev
 
 # Copy source code
 COPY . .
@@ -20,3 +21,8 @@ RUN mkdir -p uploads
 EXPOSE 3000
 
 CMD ["node", "dist/index.js"]
+
+
+
+
+
